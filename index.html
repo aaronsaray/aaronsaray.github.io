@@ -66,12 +66,13 @@
           <div class="col-xs-12 col-md-8">
             {% assign sorted = site.github.public_repositories | sort: 'updated_at' | reverse %}
             {% for repository in sorted %}
+            {% unless repository.fork %}
             <div class="card mb-5 {% if repository.archived %}archived{% endif %}">
               <div class="card-body">
                 <h5 class="card-title">
                   <a class="text-dark" href="{{ repository.html_url }}">{{
-                      repository.name
-                    }}</a>
+                        repository.name
+                      }}</a>
                 </h5>
                 <h6 class="card-subtitle mb-2 text-muted">
                   {{ repository.full_name }}
@@ -90,6 +91,7 @@
               <span class="archived">Archived</span>
               {% endif %}
             </div>
+            {% endunless %}
             {% endfor %}
           </div>
         </div>
