@@ -1,105 +1,150 @@
----
----
-
 <!DOCTYPE html>
 <html lang="en">
 
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta http-equiv="X-UA-Compatible" content="ie=edge" />
-  <title>{{ site.title }}</title>
-  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
-    integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous" />
-  <link rel="icon" type="image/png" href="{{ site.github.owner.avatar_url }}" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Aaron Saray on Github</title>
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css"
+    integrity="sha384-JcKb8q3iqJ61gNV9KGb8thSsNjpSL0n8PARn9HuZOnIxN0hoP+VmmDGMN5t9UJ0Z" crossorigin="anonymous">
+  <script src="https://cdn.jsdelivr.net/npm/vue@2.6.12"></script>
   <style>
-    div.archived {
-      opacity: 0.5;
-      transition: all 0.3s;
+    [v-cloak] {
+      display: none;
     }
 
-    div.archived:hover {
-      opacity: 1;
+    body {
+      background: #242628;
+      color: #eeeeee;
     }
 
-    span.archived {
-      position: absolute;
-      top: 0;
-      right: 4px;
-      text-align: right;
-      color: #ff0000;
-      font-weight: bold;
+    header img {
+      border-radius: 50%;
+      height: 4.5rem;
+      width: 4.5rem;
+      vertical-align: baseline;
+    }
+
+    .card {
+      max-width: 30rem;
+    }
+
+    .card.archived {
+      background-color: black;
+    }
+
+    .card-header>* {
+      line-height: 1.4;
     }
   </style>
 </head>
 
-<body class="bg-light">
-  <main class="mt-4 container shadow-lg p-3 mb-5 bg-white rounded">
-    <h1 class="text-center mb-4">
-      <a class="text-dark" href="https://github.com/aaronsaray" title="Go directly to Github">Aaron Saray on Github</a>
-    </h1>
-    <div class="row">
-      <div class="col-xs-12 col-md-8 offset-md-2">
-        <div class="row">
-          <aside class="col-xs-12 col-md-4">
-            <div class="mb-2">
-              <img src="{{ site.github.owner.avatar_url }}" class="img-fluid" alt="Aaron" />
-            </div>
-            <ul class="list-group list-group-flush">
-              <li class="list-group-item border-top-0">
-                {{ site.github.owner.bio }}
-              </li>
-              <li class="list-group-item">
-                <a href="https://aaronsaray.com">aaronsaray.com</a>
-              </li>
-              <li class="list-group-item">
-                <a href="https://twitter.com/aaronsaray">@aaronsaray</a>
-              </li>
-              <li class="list-group-item">
-                <a href="https://thedevmanager.com">TheDevManager.com</a>
-              </li>
-              <li class="list-group-item">
-                <a href="https://morebetterfaster.io">Work with Me</a>
-              </li>
-            </ul>
-          </aside>
-          <div class="col-xs-12 col-md-8">
-            {% assign sorted = site.github.public_repositories | sort: 'updated_at' | reverse %}
-            {% for repository in sorted %}
-            {% unless repository.fork %}
-            <div class="card mb-5 {% if repository.archived %}archived{% endif %}">
-              <div class="card-body">
-                <h5 class="card-title">
-                  <a class="text-dark" href="{{ repository.html_url }}">{{
-                        repository.name
-                      }}</a>
-                </h5>
-                <h6 class="card-subtitle mb-2 text-muted">
-                  {{ repository.full_name }}
-                </h6>
-                <p class="card-text">
-                  {{ repository.description }}
-                </p>
-                <a href="{{ repository.html_url }}" class="card-link">Github</a>
-                {% if repository.homepage %}
-                <a href="{{ repository.homepage }}" class="card-link">Homepage</a>
-                {% endif %}
-                <br>
-                <small class="text-muted">Last updated {{ repository.updated_at }}</small>
-              </div>
-              {% if repository.archived %}
-              <span class="archived">Archived</span>
-              {% endif %}
-            </div>
-            {% endunless %}
-            {% endfor %}
-          </div>
-        </div>
+<body>
+  <div id="app" class="container pt-4 text-center">
+    <div v-if="loading" class="text-center">
+      <div class="spinner-border" role="status">
+        <span class="sr-only">Loading...</span>
       </div>
     </div>
-    <div class="text-center text-muted"><small>Last updated {{ site.time }}</small></div>
-  </main>
-  <!-- Global site tag (gtag.js) - Google Analytics -->
+    <header v-if="!loading">
+      <h1 class="display-1 mb-4">
+        <img src="https://avatars2.githubusercontent.com/u/956888" :alt="`${name}'s picture`">
+        {{ name }}
+      </h1>
+      <p>
+        {{ bio }}
+      </p>
+      <p>
+        {{ location }}
+      </p>
+      <ul class="list-inline">
+        <li class="list-inline-item"><a href="https://github.com/aaronsaray">Github</a></li>
+        <li class="list-inline-item"><a href="https://aaronsaray.com">Blog</a></li>
+        <li class="list-inline-item"><a href="https://morebetterfaster.io">Work with Me</a></li>
+      </ul>
+    </header>
+    <main>
+      <h2 class="display-4 mt-5">Public Repositories</h2>
+      <div v-for="repo in recentRepos" :key="`repo-${repo.id}`" class="card bg-dark mx-auto my-4 text-left"
+        :class="{'text-muted': repo.archived}">
+        <div class="card-header">
+          <span v-if="repo.archived" class="badge badge-danger float-right">archived</span>
+          <h3 class="h4 text-uppercase mb-0">
+            {{ repo.name }}
+            <span v-if="repo.forked" class="small text-muted text-lowercase">(fork)</span>
+          </h3>
+        </div>
+        <div class="card-body">
+          <p v-if="repo.description" class="card-text">{{ repo.description }}</p>
+          <p v-else class="card-text text-muted">No description.</p>
+          <p class="text-muted small mb-0">Last updated {{ repo.updated }}.</p>
+        </div>
+        <div class="card-footer">
+          <a :href="repo.url" class="card-link" :class="{'text-muted': repo.archived}">Github</a>
+          <a v-if="repo.homepage" :href="repo.homepage" class="card-link"
+            :class="{'text-muted': repo.archived}">Homepage</a>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    // just really simple and fast code to read in the landing page stuff, not fault tolerant
+
+    const mainUrl = 'https://api.github.com/users/aaronsaray';
+    const reposUrl = 'https://api.github.com/users/aaronsaray/repos';
+
+    new Vue({
+      el: '#app',
+
+      data: {
+        loading: true,
+        name: "",
+        image: "",
+        bio: "",
+        location: "",
+        github: "",
+        blog: "",
+        repos: []
+      },
+
+      created() {
+        Promise.all([
+          fetch(mainUrl).then(r => r.json())
+            .then(data => {
+              this.name = data.name;
+              this.image = data.avatar_url;
+              this.bio = data.bio;
+              this.location = data.location;
+              this.github = data.html_url;
+              this.blog = data.blog;
+            })
+        ],
+          fetch(reposUrl).then(r => r.json())
+            .then(data => {
+              this.repos = data.map(r => ({
+                id: r.id,
+                name: r.name,
+                url: r.html_url,
+                description: r.description,
+                updated: r.updated_at,
+                forked: r.fork,
+                homepage: r.homepage,
+                archived: r.archived
+              }))
+            })
+        ).then(() => {
+          this.loading = false;
+        })
+      },
+
+      computed: {
+        recentRepos() {
+          return this.repos.sort((a, b) => (a.updated > b.updated ? -1 : 1))
+        }
+      }
+    })
+  </script>
   <script async src="https://www.googletagmanager.com/gtag/js?id=UA-2186364-16"></script>
   <script>
     window.dataLayer = window.dataLayer || [];
